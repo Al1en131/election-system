@@ -45,13 +45,17 @@ export default function LandingPage() {
               >
                 Kontak
               </Link>
-            </div>
-            <div>
               <Link
-                href="/login"
-                className="px-4 py-2 bg-[#0B7077] text-white rounded-lg transition"
+                href="#contact"
+                className="text-gray-700 hover:text-[#0B7077]"
               >
-                Login
+                Kandidat
+              </Link>
+              <Link
+                href="#contact"
+                className="text-gray-700 hover:text-[#0B7077]"
+              >
+                Voting
               </Link>
             </div>
           </div>
@@ -69,20 +73,6 @@ export default function LandingPage() {
             pencatatan suara secara digital dan penghitungan hasil secara
             real-time.
           </p>
-          <div className="flex gap-4">
-            <Link
-              href="/login"
-              className="px-6 py-3 bg-[#0B7077] text-[#D2E6E4] font-semibold rounded-lg shadow hover:border hover:border-[#0B7077] hover:bg-transparent hover:text-[#0B7077] transition"
-            >
-              Login
-            </Link>
-            <Link
-              href="/register"
-              className="px-6 py-3 bg-[#0B7077] text-[#D2E6E4] font-semibold rounded-lg shadow hover:border hover:border-[#0B7077] hover:bg-transparent hover:text-[#0B7077] transition"
-            >
-              Registrasi
-            </Link>
-          </div>{" "}
           <div>
             <Image
               src="/images/people.svg"
