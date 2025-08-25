@@ -3,6 +3,16 @@ import { Poppins } from "next/font/google";
 import Link from "next/link";
 import Image from "next/image";
 import { useState } from "react";
+import { Listbox } from "@headlessui/react";
+
+const programs = [
+  "Pilih Program Studi",
+  "S1 Informatika",
+  "D4 Elektromedis",
+  "D4 Anestesi",
+  "S1 Keperawatan",
+  "S1 Kebidanan",
+];
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -11,7 +21,7 @@ const poppins = Poppins({
 export default function Register() {
   const [nim, setNim] = useState("");
   const [name, setName] = useState("");
-  const [program, setProgram] = useState("");
+  const [program, setProgram] = useState(programs[0]);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -89,12 +99,29 @@ export default function Register() {
               value={name}
               onChange={(e) => setName(e.target.value)}
             />
-            <input
-              className="border border-white rounded px-3 py-2 focus:outline-none focus:ring focus:ring-white"
-              placeholder="Program"
-              value={program}
-              onChange={(e) => setProgram(e.target.value)}
-            />
+            <div className="w-full relative">
+              <Listbox value={program} onChange={setProgram}>
+                <Listbox.Button className="w-full border border-white rounded focus:ring focus:ring-white px-3 py-2 text-white text-left">
+                  {program || "Pilih Program Studi"}
+                </Listbox.Button>
+                <Listbox.Options className="absolute mt-1 w-full border border-white rounded focus:ring focus:ring-white bg-[#D2E6E4] text-[#0B7077] z-50">
+                  {programs.map((prog) => (
+                    <Listbox.Option
+                      key={prog}
+                      value={prog}
+                      className={({ active }) =>
+                        `cursor-pointer px-3 py-2 ${
+                          active ? "bg-[#0B7077] text-white" : ""
+                        }`
+                      }
+                    >
+                      {prog}
+                    </Listbox.Option>
+                  ))}
+                </Listbox.Options>
+              </Listbox>
+            </div>
+
             <input
               className="border border-white rounded px-3 py-2 focus:outline-none focus:ring focus:ring-white"
               placeholder="Email"

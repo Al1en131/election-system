@@ -20,16 +20,24 @@ export default function Login() {
       body: JSON.stringify({ nim, password }),
     });
 
+    const data = await res.json();
+
     if (res.ok) {
-      window.location.href = "/home";
+      // Misal backend mengirim { token, role }
+      if (data.role === "admin") {
+        window.location.href = "/admin";
+      } else {
+        window.location.href = "/home";
+      }
     } else {
-      const data = await res.json();
       alert(data.error || "Login failed");
     }
   }
 
   return (
-    <div className={`${poppins.className} flex min-h-screen bg-[#0B7077] relative items-center justify-center`}>
+    <div
+      className={`${poppins.className} flex min-h-screen bg-[#0B7077] relative items-center justify-center`}
+    >
       {/* Background Decorations */}
       <Image
         src="/images/white-6.svg"
