@@ -28,6 +28,7 @@ model Organization {
   id          String     @id @default(uuid())
   name        String
   description String?
+  logo        String?
   createdAt   DateTime   @default(now())
 
   elections   Election[]

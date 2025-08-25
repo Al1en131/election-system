@@ -20,5 +20,6 @@ export async function POST(req: Request) {
   const token = createSessionToken({ id: user.id, nim: user.nim });
   cookies().set("session", token, { httpOnly: true, path: "/" });
 
-  return NextResponse.json({ ok: true });
+  // KIRIM ROLE JUGA
+  return NextResponse.json({ ok: true, role: user.role });
 }

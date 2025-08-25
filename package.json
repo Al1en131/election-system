@@ -14,6 +14,7 @@
     "@headlessui/react": "^2.2.7",
     "@prisma/client": "^6.14.0",
     "argon2": "^0.44.0",
+    "formidable": "^3.5.4",
     "headlessui": "^0.0.0",
     "jose": "^6.0.13",
     "libsodium-wrappers": "^0.7.15",
