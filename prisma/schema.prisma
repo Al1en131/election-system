@@ -1,0 +1,73 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql" // works with MariaDB
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String  @id @default(uuid())
+  nim          String  @unique
+  name         String
+  program      String?
+  email        String? @unique
+  passwordHash String?
+  role         String  @default("student") // "admin" or "student"
+  createdAt    DateTime @default(now())
+  votes        Vote[]
+}
+
+model Organization {
+  id         String  @id @default(uuid())
+  name       String  @unique
+  description String?
+  createdAt  DateTime @default(now())
+  elections  Election[]
+}
+
+model Election {
+  id          String   @id @default(uuid())
+  title       String
+  description String?
+  orgId       String
+  startDate   DateTime
+  endDate     DateTime
+  publicKeyB64 String? // admin public key for sealing
+  createdAt   DateTime @default(now())
+
+  organization Organization @relation(fields: [orgId], references: [id])
+  candidates   Candidate[]
+  votes        Vote[]
+
+  @@index([orgId])
+}
+
+model Candidate {
+  id           String   @id @default(uuid())
+  electionId   String
+  leaderName   String
+  deputyName   String
+  photo        String?
+  visionMission String?
+  createdAt    DateTime @default(now())
+
+  election  Election @relation(fields: [electionId], references: [id])
+  votes     Vote[]
+}
+
+model Vote {
+  id           String  @id @default(uuid())
+  electionId   String
+  candidateId  String
+  userId       String
+  encryptedVote String
+  createdAt    DateTime @default(now())
+
+  election  Election @relation(fields: [electionId], references: [id])
+  candidate Candidate @relation(fields: [candidateId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@unique([electionId, userId]) // 1 user only once per election
+}
