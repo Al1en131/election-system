@@ -3,71 +3,86 @@ generator client {
 }
 
 datasource db {
-  provider = "mysql" // works with MariaDB
+  provider = "mysql"
   url      = env("DATABASE_URL")
 }
 
+// ===================== Users =====================
 model User {
-  id           String  @id @default(uuid())
-  nim          String  @unique
+  id           String   @id @default(uuid())
+  nim          String   @unique
   name         String
   program      String?
-  email        String? @unique
+  email        String?  @unique
   passwordHash String?
-  role         String  @default("student") // "admin" or "student"
+  role         String   @default("student") // enum('student','admin')
   createdAt    DateTime @default(now())
+
   votes        Vote[]
+
+  @@map("Users") // mapping ke tabel asli
 }
 
+// ===================== Organizations =====================
 model Organization {
-  id         String  @id @default(uuid())
-  name       String  @unique
+  id          String     @id @default(uuid())
+  name        String
   description String?
-  createdAt  DateTime @default(now())
-  elections  Election[]
+  createdAt   DateTime   @default(now())
+
+  elections   Election[]
+
+  @@map("organizations")
 }
 
+// ===================== Elections =====================
 model Election {
-  id          String   @id @default(uuid())
+  id          String       @id @default(uuid())
   title       String
   description String?
   orgId       String
   startDate   DateTime
   endDate     DateTime
-  publicKeyB64 String? // admin public key for sealing
-  createdAt   DateTime @default(now())
+  createdAt   DateTime     @default(now())
+  publicKeyB64 String?
 
   organization Organization @relation(fields: [orgId], references: [id])
   candidates   Candidate[]
   votes        Vote[]
 
   @@index([orgId])
+  @@map("elections")
 }
 
+// ===================== Candidates =====================
 model Candidate {
-  id           String   @id @default(uuid())
-  electionId   String
-  leaderName   String
-  deputyName   String
-  photo        String?
-  visionMission String?
-  createdAt    DateTime @default(now())
+  id              String   @id @default(uuid())
+  chairmanName    String
+  viceChairmanName String
+  orgId           String?  // relasi opsional ke organization
+  photo           String?
+  visionMission   String?
+  createdAt       DateTime @default(now())
 
-  election  Election @relation(fields: [electionId], references: [id])
-  votes     Vote[]
+  votes      Vote[]
+  election   Election? @relation(fields: [orgId], references: [id])
+
+  @@map("candidates")
 }
 
+// ===================== Votes =====================
 model Vote {
-  id           String  @id @default(uuid())
+  id           String   @id @default(uuid())
   electionId   String
   candidateId  String
   userId       String
-  encryptedVote String
   createdAt    DateTime @default(now())
+  encryptedVote String?
 
-  election  Election @relation(fields: [electionId], references: [id])
-  candidate Candidate @relation(fields: [candidateId], references: [id])
-  user      User     @relation(fields: [userId], references: [id])
+  election    Election  @relation(fields: [electionId], references: [id])
+  candidate   Candidate @relation(fields: [candidateId], references: [id])
+  user        User      @relation(fields: [userId], references: [id])
 
-  @@unique([electionId, userId]) // 1 user only once per election
+  @@unique([electionId, userId]) // 1 user hanya boleh vote 1x per election
+  @@map("votes")
 }
