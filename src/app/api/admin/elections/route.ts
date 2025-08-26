@@ -86,6 +86,8 @@ export async function GET() {
       include: {
         organization: true,
         candidates: true,
+        votes: true,
+
       },
     });
     return NextResponse.json({ ok: true, data: elections });

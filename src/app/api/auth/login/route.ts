@@ -17,9 +17,10 @@ export async function POST(req: Request) {
   if (!ok)
     return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
 
-  const token = createSessionToken({ id: user.id, nim: user.nim });
+  // 🔑 harus di-await
+  const token = await createSessionToken({ id: user.id, nim: user.nim });
+
   cookies().set("session", token, { httpOnly: true, path: "/" });
 
-  // KIRIM ROLE JUGA
   return NextResponse.json({ ok: true, role: user.role });
 }

@@ -3,13 +3,45 @@
 import { Poppins } from "next/font/google";
 import Link from "next/link";
 import Image from "next/image";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 const poppins = Poppins({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
 });
 
-export default function LandingPage() {
+interface User {
+  name: string;
+  email: string;
+  nim: string;
+}
+export default function LandingPage({
+  sessionUser,
+  onLogout,
+}: {
+  sessionUser: User | null;
+  onLogout: () => void;
+}) {
+  const [user, setUser] = useState<User | null>(sessionUser);
+  const router = useRouter();
+  const handleLogout = async () => {
+    try {
+      const res = await fetch("/api/auth/logout", { method: "POST" });
+      const data = await res.json();
+
+      if (data.ok) {
+        setUser(null);
+        alert("Logout berhasil");
+        router.push("/"); 
+      } else {
+        alert(data.error || "Logout gagal");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Logout gagal");
+    }
+  };
   return (
     <div className={`${poppins.className} flex flex-col min-h-screen relative`}>
       <Image
@@ -27,37 +59,28 @@ export default function LandingPage() {
           <div className="flex justify-between h-16 items-center relative z-10">
             <div className="text-xl font-bold text-[#0B7077]">KlikVote</div>
             <div className="hidden md:flex space-x-6">
-              <Link
-                href="#features"
-                className="text-gray-700 hover:text-[#0B7077]"
-              >
-                Fitur
+              <Link href="/home" className="text-gray-700 hover:text-[#0B7077]">
+                Beranda
               </Link>
               <Link
-                href="#about"
-                className="text-gray-700 hover:text-[#0B7077]"
-              >
-                Tentang Kami
-              </Link>
-              <Link
-                href="#contact"
-                className="text-gray-700 hover:text-[#0B7077]"
-              >
-                Kontak
-              </Link>
-              <Link
-                href="#contact"
+                href="/candidates"
                 className="text-gray-700 hover:text-[#0B7077]"
               >
                 Kandidat
               </Link>
               <Link
-                href="#contact"
+                href="/voting"
                 className="text-gray-700 hover:text-[#0B7077]"
               >
                 Voting
               </Link>
             </div>
+            <button
+              onClick={handleLogout}
+              className="text-left px-4 py-2 text-white bg-[#0B7077] rounded"
+            >
+              Logout
+            </button>
           </div>
         </div>
       </nav>

@@ -14,18 +14,16 @@ export async function PATCH(
   try {
     const formData = await req.formData();
 
-    // Ambil field dasar election
     const title = formData.get("title") as string;
     const description = formData.get("description") as string;
     const orgId = formData.get("orgId") as string;
     const startDate = formData.get("startDate") as string;
     const endDate = formData.get("endDate") as string;
 
-    // Folder upload
     const uploadDir = path.join(process.cwd(), "public/uploads");
     if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
 
-    // Map file ke path
+    // Simpan file baru
     const filesMap: Record<string, string> = {};
     for (const [key, value] of formData.entries()) {
       if (value instanceof File) {
@@ -46,7 +44,14 @@ export async function PATCH(
         | string
         | null;
 
-      // Siapkan data update
+      // Dapatkan URL lama dari form
+      const oldChairUrl = formData.get(
+        `candidates[${idx}][photoChairManUrl]`
+      ) as string;
+      const oldViceUrl = formData.get(
+        `candidates[${idx}][photoViceChairManUrl]`
+      ) as string;
+
       const updateData: any = {
         chairmanName: formData.get(
           `candidates[${idx}][chairmanName]`
@@ -57,17 +62,15 @@ export async function PATCH(
         visionMission: formData.get(
           `candidates[${idx}][visionMission]`
         ) as string,
+        orgId,
+        photoChairMan:
+          filesMap[`candidates[${idx}][photoChairMan]`] || oldChairUrl || null,
+        photoViceChairMan:
+          filesMap[`candidates[${idx}][photoViceChairMan]`] ||
+          oldViceUrl ||
+          null,
+          
       };
-
-      // Tambahkan foto hanya jika ada upload baru
-      if (filesMap[`candidates[${idx}][photoChairMan]`]) {
-        updateData.photoChairMan =
-          filesMap[`candidates[${idx}][photoChairMan]`];
-      }
-      if (filesMap[`candidates[${idx}][photoViceChairMan]`]) {
-        updateData.photoViceChairMan =
-          filesMap[`candidates[${idx}][photoViceChairMan]`];
-      }
 
       candidates.push({
         id: candidateId,
@@ -77,7 +80,6 @@ export async function PATCH(
       idx++;
     }
 
-    // Update election + candidates
     const updatedElection = await prisma.election.update({
       where: { id: electionId },
       data: {
@@ -87,20 +89,13 @@ export async function PATCH(
         startDate: new Date(startDate),
         endDate: new Date(endDate),
         candidates: {
-          // Hapus kandidat lama yang tidak ada di form
           deleteMany: {
-            id: {
-              notIn: candidates.filter((c) => c.id).map((c) => c.id),
-            },
+            id: { notIn: candidates.filter((c) => c.id).map((c) => c.id) },
           },
-          // Upsert kandidat
           upsert: candidates.map((c) => ({
-            where: { id: c.id || "" }, // jika id kosong maka create baru
+            where: { id: c.id || "" },
             update: c.updateData,
-            create: {
-              ...c.updateData,
-              orgId: orgId || null,
-            },
+            create: { ...c.updateData, orgId },
           })),
         },
       },
@@ -134,7 +129,6 @@ export async function GET() {
     );
   }
 }
-
 
 export async function DELETE(
   request: Request,

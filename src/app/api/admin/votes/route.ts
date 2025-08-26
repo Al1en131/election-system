@@ -1,17 +1,22 @@
-import { prisma } from "@/app/lib/prisma";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+import {prisma} from "@/app/lib/prisma";
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
-    const elections = await prisma.election.findMany({
+    const votes = await prisma.vote.findMany({
       include: {
-        organization: true,
-        candidates: true,
+        candidate: true,
+        election: true,
+        user: true, // ⬅️ ambil data user
       },
     });
-    return NextResponse.json({ ok: true, data: elections });
-  } catch (err) {
-    console.error(err);
-    return NextResponse.json({ ok: false, error: "Failed to fetch elections" }, { status: 500 });
+
+    return NextResponse.json({ ok: true, data: votes });
+  } catch (error) {
+    console.error(error);
+    return NextResponse.json(
+      { ok: false, error: "Failed to fetch votes" },
+      { status: 500 }
+    );
   }
 }
