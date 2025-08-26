@@ -1,65 +1,66 @@
 "use client";
 
-import Image from "next/image";
-import Link from "next/link";
 import { useState, useEffect } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { Pie } from "react-chartjs-2";
+import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
 
-const activities = [
-  {
-    name: "Amanda Lock",
-    time: "October 2, 2023 - 10:42 PM",
-    avatar: "/images/avatar1.jpg",
-  },
-  {
-    name: "Selina Fye",
-    time: "October 2, 2023 - 09:16 PM",
-    avatar: "/images/avatar2.jpg",
-  },
-  {
-    name: "Rin Vulcan",
-    time: "October 2, 2023 - 05:23 PM",
-    avatar: "/images/avatar3.jpg",
-  },
-];
+ChartJS.register(ArcElement, Tooltip, Legend);
 
-const reviews = [
-  { name: "Calipso Sensations", score: 7.2 },
-  { name: "V Tech Mattee", score: 9.1 },
-  { name: "Emerald V6", score: 7.9 },
-];
+interface Entity {
+  id: string;
+  [key: string]: any;
+}
 
-const alerts = [
-  {
-    title: "Upcoming Elections...",
-    date: "3 October, 2023 - 07:26 AM",
-    img: "/images/alert1.jpg",
-  },
-  {
-    title: "New Releases ...",
-    date: "3 October, 2023 - 05:17 AM",
-    img: "/images/alert2.jpg",
-  },
-  {
-    title: "Forest Inferno Cont...",
-    date: "2 October, 2023 - 10:29 PM",
-    img: "/images/alert3.jpg",
-  },
-  {
-    title: "Flood Damage in...",
-    date: "2 October, 2023 - 07:16 PM",
-    img: "/images/alert4.jpg",
-  },
-];
+interface Candidate {
+  id: string;
+  chairmanName: string;
+  viceChairmanName: string;
+}
 
+interface Vote {
+  candidateId: string;
+}
+
+interface Election {
+  id: string;
+  title: string;
+  startDate: string;
+  candidates: Candidate[];
+  votes: Vote[];
+}
 export default function Dashboard() {
-  const [draft, setDraft] = useState("");
   const [today, setToday] = useState("");
+  const [counts, setCounts] = useState({
+    organizations: 0,
+    users: 0,
+    voters: 0,
+    candidates: 0,
+  });
   const router = useRouter();
-
+  const [elections, setElections] = useState<Election[]>([]);
   useEffect(() => {
+    async function fetchData() {
+      // Ambil elections sekalian candidates + votes
+      const res = await fetch("/api/admin/elections");
+      const json = await res.json();
+
+      if (json.ok) {
+        const sorted = json.data.sort(
+          (a: Election, b: Election) =>
+            new Date(b.startDate).getTime() - new Date(a.startDate).getTime()
+        );
+        setElections(sorted.slice(0, 2)); // ambil 2 terakhir
+      }
+    }
+
+    fetchData();
+  }, []);
+  useEffect(() => {
+    // Set tanggal hari ini
     const now = new Date();
-    // Format tanggal: 25 Oktober 2025
     const options: Intl.DateTimeFormatOptions = {
       year: "numeric",
       month: "long",
@@ -67,21 +68,93 @@ export default function Dashboard() {
     };
     setToday(now.toLocaleDateString("id-ID", options));
   }, []);
+  const [users, setUsers] = useState<Entity[]>([]);
+  const [organizations, setOrganizations] = useState<Entity[]>([]);
+  const [votes, setVotes] = useState<Entity[]>([]);
+  const [candidates, setCandidates] = useState<Entity[]>([]);
+
+  useEffect(() => {
+    async function fetchData() {
+      const orgRes = await fetch("/api/admin/organizations");
+      const orgJson = await orgRes.json();
+      setOrganizations(orgJson.data || []); // ambil array di dalam `data`
+
+      const userRes = await fetch("/api/admin/users");
+      const userJson = await userRes.json();
+      setUsers(userJson.data || []);
+
+      const voteRes = await fetch("/api/admin/votes");
+      const voteJson = await voteRes.json();
+      setVotes(voteJson.data || []);
+
+      const candRes = await fetch("/api/admin/candidates");
+      const candJson = await candRes.json();
+      setCandidates(candJson.data || []);
+    }
+
+    const fetchCounts = async () => {
+      try {
+        const [orgRes, userRes, voterRes, candidateRes] = await Promise.all([
+          fetch("/api/admin/organizations"),
+          fetch("/api/admin/users"),
+          fetch("/api/admin/votes"),
+          fetch("/api/admin/candidates"),
+        ]);
+
+        const [orgData, userData, voterData, candidateData] = await Promise.all(
+          [orgRes.json(), userRes.json(), voterRes.json(), candidateRes.json()]
+        );
+
+        setCounts({
+          organizations: orgData.length || 0,
+          users: userData.length || 0,
+          voters: voterData.length || 0,
+          candidates: candidateData.length || 0,
+        });
+      } catch (err) {
+        console.error("Gagal fetch counts:", err);
+      }
+    };
+
+    fetchCounts();
+    fetchData();
+  }, []);
 
   const handleLogout = async () => {
     try {
       const res = await fetch("/api/auth/logout", { method: "POST" });
       const data = await res.json();
-      if (data.ok) {
-        router.push("/"); // redirect ke login
-      } else {
-        alert("Logout gagal");
-      }
+      if (data.ok) router.push("/");
     } catch (err) {
       console.error(err);
-      alert("Terjadi kesalahan saat logout");
+      alert("Logout gagal");
     }
   };
+
+  // Tambah state untuk vote terbaru
+  const [recentVotes, setRecentVotes] = useState<any[]>([]);
+
+  useEffect(() => {
+    async function fetchRecentVotes() {
+      try {
+        const res = await fetch("/api/admin/votes");
+        const json = await res.json();
+        if (json.ok) {
+          // urutkan vote terbaru
+          const sorted = json.data.sort(
+            (a: any, b: any) =>
+              new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+          );
+          setRecentVotes(sorted.slice(0, 5)); // ambil 5 terakhir
+        }
+      } catch (err) {
+        console.error("Gagal ambil vote terbaru:", err);
+      }
+    }
+
+    fetchRecentVotes();
+  }, []);
+
   return (
     <div className="flex min-h-screen bg-gray-50 font-sans">
       {/* Sidebar */}
@@ -190,6 +263,26 @@ export default function Dashboard() {
             </svg>
             Voting
           </Link>
+          <Link
+            href="/admin/elections"
+            className="hover:bg-[#0B7077] p-2  hover:text-white rounded-md cursor-pointer flex items-center gap-2"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth="1.5"
+              stroke="currentColor"
+              className="size-6"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25M9 16.5v.75m3-3v3M15 12v5.25m-4.5-15H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"
+              />
+            </svg>
+            Hasil
+          </Link>
         </nav>
         <div className="flex-1"></div>
         <button
@@ -217,93 +310,193 @@ export default function Dashboard() {
       {/* Main Content */}
       <main className="flex-1 p-8 flex flex-col gap-6">
         {/* Welcome Banner */}
-        <div className="bg-[#0B7077] text-white rounded-lg p-6 flex justify-between items-center">
+        <div className="bg-[#0B7077] text-white rounded-lg px-6 flex gap-6 justify-between items-center">
           <div>
             <h2 className="font-bold text-xl">Selamat Datang, Admin!</h2>
             <p>
-              Hari ini adalah <b>{today}</b>. Terdapat <b>126</b> berita dan
-              notifikasi, serta <b>3</b> pesan yang menunggu tanggapan.
+              Hari ini adalah <b>{today}</b>. sebuah kesempatan baru bagi Admin
+              untuk memastikan jalannya proses pemilihan tetap transparan,
+              teratur, dan mudah diakses oleh seluruh pengguna.
             </p>
           </div>
           <div>
             <Image
               src="/images/welcome.svg"
               alt="Illustration"
-              width={300}
-              height={300}
+              width={400}
+              height={400}
+              className="w-2xl"
             />
           </div>
         </div>
-
         {/* Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* Weather */}
-          <div className="bg-white rounded-lg p-4 flex flex-col items-center">
-            <div className="text-4xl">🌧️</div>
-            <p className="mt-2 font-bold text-lg">16° (Rain)</p>
-            <span className="text-gray-400 text-sm mt-1">Austin, TX (USA)</span>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          <div className="bg-white rounded-lg p-4 flex flex-col items-center shadow-xl border border-[#0B7077]">
+            <div className="text-4xl text-[#0B7077]">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                strokeWidth="1.5"
+                stroke="currentColor"
+                className="size-9"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M3.75 21h16.5M4.5 3h15M5.25 3v18m13.5-18v18M9 6.75h1.5m-1.5 3h1.5m-1.5 3h1.5m3-6H15m-1.5 3H15m-1.5 3H15M9 21v-3.375c0-.621.504-1.125 1.125-1.125h3.75c.621 0 1.125.504 1.125 1.125V21"
+                />
+              </svg>
+            </div>
+            <p className="mt-2 font-bold text-[#0B7077]  text-lg">
+              {organizations.length}
+            </p>
+            <span className="text-gray-400 text-sm mt-1">Organisasi</span>
           </div>
-
-          {/* Colleagues Activity */}
-          <div className="bg-white rounded-lg p-4">
-            <h3 className="font-semibold mb-3">Colleagues' Activity</h3>
-            <ul className="flex flex-col gap-3">
-              {activities.map((act) => (
-                <li key={act.name} className="flex items-center gap-3">
-                  <Image
-                    src={act.avatar}
-                    alt={act.name}
-                    width={32}
-                    height={32}
-                    className="rounded-full"
-                  />
-                  <div>
-                    <p className="font-medium">{act.name}</p>
-                    <p className="text-gray-400 text-sm">{act.time}</p>
-                  </div>
-                </li>
-              ))}
-            </ul>
+          <div className="bg-white rounded-lg p-4 flex flex-col items-center shadow-xl border border-[#0B7077]">
+            <div className="text-4xl text-[#0B7077]">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                strokeWidth="1.5"
+                stroke="currentColor"
+                className="size-9"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M17.982 18.725A7.488 7.488 0 0 0 12 15.75a7.488 7.488 0 0 0-5.982 2.975m11.963 0a9 9 0 1 0-11.963 0m11.963 0A8.966 8.966 0 0 1 12 21a8.966 8.966 0 0 1-5.982-2.275M15 9.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"
+                />
+              </svg>
+            </div>
+            <p className="mt-2 font-bold text-[#0B7077] text-lg">
+              {counts.users}
+            </p>
+            <span className="text-gray-400 text-sm mt-1">User</span>
           </div>
-
-          {/* Quick Draft */}
-          <div className="bg-white rounded-lg p-4 flex flex-col">
-            <h3 className="font-semibold mb-2">Quick Draft</h3>
-            <textarea
-              placeholder="Write something..."
-              className="border border-gray-300 rounded p-2 mb-2 flex-1 resize-none"
-              value={draft}
-              onChange={(e) => setDraft(e.target.value)}
-            />
-            <button className="bg-purple-600 text-white py-2 rounded hover:bg-purple-700">
-              Continue
-            </button>
+          <div className="bg-white rounded-lg p-4 flex flex-col items-center shadow-xl border border-[#0B7077]">
+            <div className="text-4xl text-[#0B7077]">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                strokeWidth="1.5"
+                stroke="currentColor"
+                className="size-9"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M10.5 6a7.5 7.5 0 1 0 7.5 7.5h-7.5V6Z"
+                />
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M13.5 10.5H21A7.5 7.5 0 0 0 13.5 3v7.5Z"
+                />
+              </svg>
+            </div>
+            <p className="mt-2 text-[#0B7077] font-bold text-lg">
+              {votes.length}
+            </p>
+            <span className="text-gray-400 text-sm mt-1">Voter</span>
+          </div>
+          <div className="bg-white rounded-lg p-4 flex flex-col items-center shadow-xl border border-[#0B7077]">
+            <div className="text-4xl text-[#0B7077]">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                strokeWidth="1.5"
+                stroke="currentColor"
+                className="size-9"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0 1 11.964-3.07M12 6.375a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Zm8.25 2.25a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z"
+                />
+              </svg>
+            </div>
+            <p className="mt-2 text-[#0B7077] font-bold text-lg">
+              {candidates.length}
+            </p>
+            <span className="text-gray-400 text-sm mt-1">Kandidat</span>
           </div>
         </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {elections.map((election) => {
+            const labels = election.candidates.map(
+              (c) => `${c.chairmanName} & ${c.viceChairmanName}`
+            );
+            const voteCounts = election.candidates.map(
+              (c) => election.votes.filter((v) => v.candidateId === c.id).length
+            );
+            const colors = [
+              "#0B7077",
+              "#16A085",
+              "#1ABC9C",
+              "#27AE60",
+              "#2980B9",
+              "#8E44AD",
+              "#F39C12",
+            ];
 
-        {/* Reviews */}
-        <div className="bg-white rounded-lg p-4">
-          <h3 className="font-semibold mb-4">Your Latest Reviews</h3>
-          <ul className="flex flex-col gap-3">
-            {reviews.map((rev) => (
-              <li key={rev.name} className="flex justify-between items-center">
-                <span>{rev.name}</span>
-                <span className="bg-purple-600 text-white px-3 py-1 rounded">
-                  {rev.score}
-                </span>
-                <button className="bg-purple-100 text-purple-700 px-3 py-1 rounded hover:bg-purple-200">
-                  Full Review
-                </button>
-              </li>
-            ))}
-          </ul>
+            return (
+              <div
+                key={election.id}
+                className="bg-white border border-[#0B7077] rounded-lg p-6 shadow-xl"
+              >
+                <h3 className="text-xl font-bold text-[#0B7077] mb-4">
+                  {election.title}
+                </h3>
+                <div className="flex justify-center gap-4">
+                  {/* Pie Chart */}
+                  <div className="w-[150px] h-[150px]">
+                    <Pie
+                      data={{
+                        labels,
+                        datasets: [
+                          {
+                            data: voteCounts,
+                            backgroundColor: colors,
+                          },
+                        ],
+                      }}
+                      options={{
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                      }}
+                    />
+                  </div>
+
+                  {/* Custom Legend */}
+                  <div className="flex flex-col gap-2 justify-center">
+                    {labels.map((label, i) => (
+                      <div key={i} className="flex gap-2">
+                        <span
+                          className="w-4 h-4 mt-0.5 rounded-full shrink-0"
+                          style={{ backgroundColor: colors[i] }}
+                        />
+                        <span className="text-sm text-gray-700">
+                          {label} — <b>{voteCounts[i]} vote</b>
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
         </div>
       </main>
 
       {/* Right Sidebar */}
-      <aside className="w-64 flex flex-col gap-6 p-6">
+      <aside className="w-64 flex flex-col gap-6 pr-6 py-8">
         {/* Profile */}
-        <div className="bg-white rounded-lg p-4 flex flex-col items-center">
+        <div className="bg-white shadow-xl border border-[#0B7077] rounded-lg p-4 flex flex-col items-center">
           <Image
             src="/images/alif.png"
             alt="Julia Grey"
@@ -337,25 +530,49 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Latest Alerts */}
-        <div className="bg-white rounded-lg p-4">
-          <h3 className="font-semibold mb-2">Latest Alerts</h3>
-          <ul className="flex flex-col gap-2">
-            {alerts.map((a) => (
-              <li key={a.title} className="flex items-center gap-2">
-                <Image
-                  src={a.img}
-                  alt={a.title}
-                  width={40}
-                  height={40}
-                  className="rounded"
-                />
-                <div>
-                  <p className="text-sm font-medium">{a.title}</p>
-                  <span className="text-gray-400 text-xs">{a.date}</span>
-                </div>
-              </li>
-            ))}
+        {/* Recent Votes */}
+        <div className="bg-white shadow-xl border border-[#0B7077] rounded-lg p-4">
+          <h3 className="font-semibold text-[#0B7077] mb-3 flex items-center gap-2">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth="1.5"
+              stroke="currentColor"
+              className="size-6"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
+              />
+            </svg>
+            Voter Terbaru
+          </h3>
+          <ul className="flex flex-col gap-3">
+            {recentVotes.length === 0 ? (
+              <li className="text-gray-400 text-sm">Belum ada vote</li>
+            ) : (
+              recentVotes.map((v, i) => (
+                <li
+                  key={i}
+                  className="flex items-center gap-3 border-b border-[#0B7077]/15 pb-2"
+                >
+                  <div className="flex flex-col">
+                    <span className="text-sm font-medium text-[#0B7077]">
+                      {v.user?.name || "Pengguna"}
+                    </span>
+                    <span className="text-xs text-gray-500">
+                      Vote ke{" "}
+                      <b>
+                        {v.candidate?.chairmanName} &{" "}
+                        {v.candidate?.viceChairmanName}
+                      </b>
+                    </span>
+                  </div>
+                </li>
+              ))
+            )}
           </ul>
         </div>
       </aside>

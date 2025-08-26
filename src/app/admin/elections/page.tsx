@@ -47,12 +47,18 @@ export default function EditButton({ id }: { id: string }) {
     fetch("/api/admin/votes")
       .then((res) => res.json())
       .then((data) => {
-        if (data.ok) setVotes(data.data);
+        if (data.ok) {
+          // Urutkan berdasarkan nama election (ascending)
+          const sortedVotes = data.data.sort((a: Vote, b: Vote) =>
+            a.election.title.localeCompare(b.election.title)
+          );
+          setVotes(sortedVotes);
+        }
       })
       .finally(() => setLoading(false));
   }, []);
 
-  if (loading) return <p>Loading...</p>;
+  if (loading) return;
   if (votes.length === 0) return <p>Belum ada data pemungutan suara.</p>;
 
   return (
@@ -192,20 +198,22 @@ export default function EditButton({ id }: { id: string }) {
       {/* Main Content */}
       <main className="flex-1 p-8 flex flex-col gap-6">
         {/* Welcome Banner */}
-        <div className="bg-[#0B7077] text-white rounded-lg px-6 flex justify-between items-center">
+        <div className="bg-[#0B7077] text-white rounded-lg px-6 flex gap-6 justify-between items-center">
           <div>
             <h2 className="font-bold text-xl">Selamat Datang, Admin!</h2>
             <p>
-              Hari ini adalah <b>{today}</b>. Terdapat <b>126</b> berita dan
-              notifikasi, serta <b>3</b> pesan yang menunggu tanggapan.
+              Hari ini adalah <b>{today}</b>. sebuah kesempatan baru bagi Admin
+              untuk memastikan jalannya proses pemilihan tetap transparan,
+              teratur, dan mudah diakses oleh seluruh pengguna.
             </p>
           </div>
           <div>
             <Image
               src="/images/welcome.svg"
               alt="Illustration"
-              width={300}
-              height={300}
+              width={400}
+              height={400}
+              className="w-2xl"
             />
           </div>
         </div>
