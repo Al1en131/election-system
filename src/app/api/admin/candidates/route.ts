@@ -5,11 +5,12 @@ export async function GET() {
   try {
     const candidates = await prisma.candidate.findMany({
       include: {
-        election: true,
-        votes: true,
-        organization: true,
+        election: true, // relasi ke Election
+        organization: true, // relasi ke Organization
+        votes: true, // kalau mau hitung votes
       },
     });
+
     return NextResponse.json({ ok: true, data: candidates });
   } catch (err) {
     console.error(err);
@@ -19,7 +20,6 @@ export async function GET() {
     );
   }
 }
-
 
 // CREATE new candidate
 export async function POST(req: Request) {

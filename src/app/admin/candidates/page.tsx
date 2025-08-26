@@ -54,7 +54,7 @@ export default function EditButton({ id }: { id: string }) {
     setCandidates(candidates.filter((c) => c.id !== id));
   };
 
-  if (loading) return <p>Loading...</p>;
+  if (loading) return;
 
   return (
     <div className="flex min-h-screen bg-gray-50 font-sans">
@@ -202,6 +202,12 @@ export default function EditButton({ id }: { id: string }) {
               <thead className="bg-[#0B7077] ">
                 <tr>
                   <th className="px-4 py-2 text-center text-sm font-medium text-white">
+                    Organisasi
+                  </th>
+                  <th className="px-4 py-2 text-center text-sm font-medium text-white">
+                    Vote
+                  </th>
+                  <th className="px-4 py-2 text-center text-sm font-medium text-white">
                     Ketua
                   </th>
                   <th className="px-4 py-2 text-center text-sm font-medium text-white">
@@ -218,6 +224,14 @@ export default function EditButton({ id }: { id: string }) {
               <tbody>
                 {candidates.map((c) => (
                   <tr key={c.id} className="border-t text-[#0B7077] text-sm">
+                    <td className="px-4 py-2 border text-center">
+                      {c.organization?.name || "-"}
+                    </td>
+
+                    {/* Nama Election */}
+                    <td className="px-4 py-2 border text-center">
+                      {c.election?.title || "-"}
+                    </td>
                     <td className="px-4 py-2 border text-center">
                       <div className="flex flex-col items-center">
                         {c.photoChairMan ? (
@@ -258,7 +272,8 @@ export default function EditButton({ id }: { id: string }) {
                       {c.visionMission}
                     </td>
                     <td className="px-4 py-2 text-center">
-                      <Link                      href={`/admin/candidates/edit/${c.id}`}
+                      <Link
+                        href={`/admin/candidates/edit/${c.id}`}
                         className="bg-blue-500 text-white px-3 py-1 rounded-md text-sm hover:bg-blue-600 inline-block"
                       >
                         Edit
