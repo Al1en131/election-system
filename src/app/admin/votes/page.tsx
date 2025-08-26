@@ -58,7 +58,7 @@ export default function ElectionsPage() {
     setElections(elections.filter((e) => e.id !== id));
   };
 
-  if (loading) return <p>Loading...</p>;
+  if (loading) return;
   return (
     <div className="flex min-h-screen bg-gray-50 font-sans">
       {/* Sidebar */}
@@ -196,7 +196,7 @@ export default function ElectionsPage() {
       {/* Main Content */}
       <main className="flex-1 p-8 flex flex-col gap-6">
         {/* Welcome Banner */}
-               <div className="bg-[#0B7077] text-white rounded-lg px-6 flex gap-6 justify-between items-center">
+        <div className="bg-[#0B7077] text-white rounded-lg px-6 flex gap-12 justify-between items-center">
           <div>
             <h2 className="font-bold text-xl">Selamat Datang, Admin!</h2>
             <p>
@@ -207,11 +207,11 @@ export default function ElectionsPage() {
           </div>
           <div>
             <Image
-              src="/images/welcome.svg"
+              src="/images/elections.svg"
               alt="Illustration"
               width={400}
               height={400}
-              className="w-2xl"
+              className=""
             />
           </div>
         </div>

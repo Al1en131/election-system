@@ -193,7 +193,7 @@ export default function AddUserPage() {
       {/* Main Content */}
       <main className="flex-1 p-8 flex flex-col gap-6">
         {/* Welcome Banner */}
-               <div className="bg-[#0B7077] text-white rounded-lg px-6 flex gap-6 justify-between items-center">
+        <div className="bg-[#0B7077] text-white rounded-lg p-6 flex gap-12 justify-between items-center">
           <div>
             <h2 className="font-bold text-xl">Selamat Datang, Admin!</h2>
             <p>
@@ -201,14 +201,34 @@ export default function AddUserPage() {
               untuk memastikan jalannya proses pemilihan tetap transparan,
               teratur, dan mudah diakses oleh seluruh pengguna.
             </p>
+            <Link
+              href="/admin/users"
+              className="text-white text-sm mt-3 flex items-center gap-2"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                strokeWidth={1.5}
+                stroke="currentColor"
+                className="w-6 h-6 border border-white rounded-full p-1"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M6.75 15.75 3 12m0 0 3.75-3.75M3 12h18"
+                />
+              </svg>
+              Kembali
+            </Link>
           </div>
           <div>
             <Image
-              src="/images/welcome.svg"
+              src="/images/users.svg"
               alt="Illustration"
               width={400}
               height={400}
-              className="w-2xl"
+              className=""
             />
           </div>
         </div>

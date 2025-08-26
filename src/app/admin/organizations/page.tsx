@@ -246,7 +246,7 @@ export default function OrganizationsPage() {
       {/* Main Content */}
       <main className="flex-1 p-8 flex flex-col gap-6">
         {/* Welcome Banner */}
-               <div className="bg-[#0B7077] text-white rounded-lg px-6 flex gap-6 justify-between items-center">
+        <div className="bg-[#0B7077] text-white rounded-lg px-6 flex gap-6 justify-between items-center">
           <div>
             <h2 className="font-bold text-xl">Selamat Datang, Admin!</h2>
             <p>
@@ -257,11 +257,11 @@ export default function OrganizationsPage() {
           </div>
           <div>
             <Image
-              src="/images/welcome.svg"
+              src="/images/organizations.svg"
               alt="Illustration"
-              width={400}
-              height={400}
-              className="w-2xl"
+              width={350}
+              height={350}
+              className=""
             />
           </div>
         </div>
