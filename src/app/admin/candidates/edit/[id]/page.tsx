@@ -1,17 +1,38 @@
 "use client";
 
+import { useState, useEffect } from "react";
+import { useRouter, useParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { useState, useEffect } from "react";
 
-import { useRouter } from "next/navigation";
-
-export default function EditButton({ id }: { id: string }) {
+interface Candidate {
+  id: string;
+  chairmanName: string;
+  viceChairmanName: string;
+  visionMission: string;
+  orgId: string;
+  electionId: string;
+  photoChairMan?: string;
+  photoViceChairMan?: string;
+}
+export default function EditCandidate() {
   const router = useRouter();
+  const params = useParams<{ id: string }>();
   const [today, setToday] = useState("");
-  const [users, setUsers] = useState<any[]>([]);
+  const [candidate, setCandidate] = useState<Candidate | null>(null);
 
-  // Ambil tanggal & data user
+  const [formData, setFormData] = useState({
+    chairmanName: "",
+    viceChairmanName: "",
+    visionMission: "",
+    orgId: "",
+    electionId: "",
+  });
+
+  const [photoChairMan, setPhotoChairMan] = useState<File | null>(null);
+  const [photoViceChairMan, setPhotoViceChairMan] = useState<File | null>(null);
+
+  // Set tanggal sekarang
   useEffect(() => {
     const now = new Date();
     const options: Intl.DateTimeFormatOptions = {
@@ -21,41 +42,62 @@ export default function EditButton({ id }: { id: string }) {
     };
     setToday(now.toLocaleDateString("id-ID", options));
   }, []);
-  useEffect(() => {
-    const now = new Date();
-    // Format tanggal: 25 Oktober 2025
-    const options: Intl.DateTimeFormatOptions = {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    };
-    setToday(now.toLocaleDateString("id-ID", options));
-  }, []);
-
-  const [candidates, setCandidates] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-
   useEffect(() => {
-    fetch("/api/admin/candidates")
+    if (!params?.id) return;
+    fetch(`/api/admin/candidates/${params.id}`)
       .then((res) => res.json())
       .then((data) => {
-        if (data.ok) {
-          setCandidates(data.data); // ← ambil data array
-        } else {
-          setCandidates([]); // kalau error, kosongin
-        }
+        setCandidate(data);
+        setFormData({
+          chairmanName: data.chairmanName ?? "",
+          viceChairmanName: data.viceChairmanName ?? "",
+          visionMission: data.visionMission ?? "",
+          orgId: data.orgId ?? "",
+          electionId: data.electionId ?? "",
+        });
+        setLoading(false);
       })
-      .finally(() => setLoading(false));
-  }, []);
+      .catch((err) => console.error("Error fetching candidate:", err));
+  }, [params?.id]);
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this candidate?")) return;
-    await fetch(`/api/admin/candidates/${id}`, { method: "DELETE" });
-    setCandidates(candidates.filter((c) => c.id !== id));
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  if (loading) return <p>Loading...</p>;
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
 
+    const body = new FormData();
+    body.append("chairmanName", formData.chairmanName);
+    body.append("viceChairmanName", formData.viceChairmanName);
+    body.append("visionMission", formData.visionMission);
+    body.append("orgId", formData.orgId);
+    body.append("electionId", formData.electionId);
+
+    if (photoChairMan) body.append("photoChairMan", photoChairMan);
+    if (photoViceChairMan) body.append("photoViceChairMan", photoViceChairMan);
+    if (formData.orgId) body.append("orgId", formData.orgId);
+    if (formData.electionId) body.append("electionId", formData.electionId);
+
+    try {
+      const res = await fetch(`/api/admin/candidates/${params.id}`, {
+        method: "PUT",
+        body,
+      });
+
+      if (res.ok) {
+        alert("Candidate updated successfully!");
+        router.push("/admin/candidates"); // redirect ke halaman kandidat
+      } else {
+        alert("Failed to update candidate");
+      }
+    } catch (err) {
+      console.error("Error updating candidate:", err);
+    }
+  };
   return (
     <div className="flex min-h-screen bg-gray-50 font-sans">
       {/* Sidebar */}
@@ -191,90 +233,102 @@ export default function EditButton({ id }: { id: string }) {
           </div>
         </div>
         <div className="bg-white rounded-lg shadow border border-[#0B7077] p-6">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-lg font-semibold text-[#0B7077]">
-              Daftar Kandidat
-            </h3>
-          </div>
+          <h3 className="text-lg font-semibold text-[#0B7077] mb-4">
+            Edit Kandidat
+          </h3>
+          <form onSubmit={handleSubmit} className="space-y-4 text-[#0B7077] ">
+            <div>
+              <label>Chairman Name</label>
+              <input
+                type="text"
+                value={formData.chairmanName}
+                onChange={(e) =>
+                  setFormData({ ...formData, chairmanName: e.target.value })
+                }
+                className="w-full border rounded px-3 py-2"
+              />
+            </div>
+            <div>
+              <label>Vice Chairman Name</label>
+              <input
+                type="text"
+                value={formData.viceChairmanName}
+                onChange={(e) =>
+                  setFormData({ ...formData, viceChairmanName: e.target.value })
+                }
+                className="w-full border rounded px-3 py-2"
+              />
+            </div>
+            <div>
+              <label>Vision & Mission</label>
+              <textarea
+                value={formData.visionMission}
+                onChange={(e) =>
+                  setFormData({ ...formData, visionMission: e.target.value })
+                }
+                className="w-full border rounded px-3 py-2"
+              />
+            </div>
+            {/* Foto Ketua */}
+            <div>
+              <label className="block font-medium">Foto Ketua</label>
 
-          <div className="overflow-x-auto">
-            <table className="min-w-full border rounded-t-xl border-[#0B7077]">
-              <thead className="bg-[#0B7077] ">
-                <tr>
-                  <th className="px-4 py-2 text-center text-sm font-medium text-white">
-                    Ketua
-                  </th>
-                  <th className="px-4 py-2 text-center text-sm font-medium text-white">
-                    Wakil Ketua
-                  </th>
-                  <th className="px-4 py-2 text-left text-sm font-medium text-white">
-                    Visi dan Misi
-                  </th>
-                  <th className="px-4 py-2 text-center text-sm font-medium text-white">
-                    Aksi
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {candidates.map((c) => (
-                  <tr key={c.id} className="border-t text-[#0B7077] text-sm">
-                    <td className="px-4 py-2 border text-center">
-                      <div className="flex flex-col items-center">
-                        {c.photoChairMan ? (
-                          <Image
-                            src={c.photoChairMan}
-                            alt={c.chairmanName}
-                            width={60}
-                            height={60}
-                            className=" object-cover mb-1"
-                          />
-                        ) : (
-                          <span className="text-gray-400 italic">No Photo</span>
-                        )}
-                        <span className="text-sm font-medium">
-                          {c.chairmanName}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="px-4 py-2 border text-center">
-                      <div className="flex flex-col items-center">
-                        {c.photoViceChairMan ? (
-                          <Image
-                            src={c.photoViceChairMan}
-                            alt={c.viceChairmanName}
-                            width={60}
-                            height={60}
-                            className=" object-cover mb-1"
-                          />
-                        ) : (
-                          <span className="text-gray-400 italic">No Photo</span>
-                        )}
-                        <span className="text-sm font-medium">
-                          {c.viceChairmanName}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="px-4 py-2 border max-w-[200px] truncate">
-                      {c.visionMission}
-                    </td>
-                    <td className="px-4 py-2 text-center">
-                      <Link                      href={`/admin/candidates/edit/${c.id}`}
-                        className="bg-blue-500 text-white px-3 py-1 rounded-md text-sm hover:bg-blue-600 inline-block"
-                      >
-                        Edit
-                      </Link>
-                      <button
-                        onClick={() => handleDelete(c.id)}
-                        className="bg-red-500 text-white px-3 py-1 rounded-md text-sm hover:bg-red-600 inline-block ml-2"
-                      >
-                        Delete
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+              {/* Preview foto lama kalau ada dan belum pilih baru */}
+              {candidate?.photoChairMan && !photoChairMan && (
+                <div className="mb-2">
+                  <p className="text-sm text-gray-600 mb-1">Foto saat ini:</p>
+                  <Image
+                    src={candidate.photoChairMan}
+                    alt={formData.chairmanName}
+                    width={100}
+                    height={100}
+                    className="rounded border object-cover"
+                  />
+                </div>
+              )}
+
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => setPhotoChairMan(e.target.files?.[0] || null)}
+                className="border px-3 py-2 rounded w-full"
+              />
+            </div>
+
+            {/* Foto Wakil Ketua */}
+            <div>
+              <label className="block font-medium">Foto Wakil Ketua</label>
+
+              {candidate?.photoViceChairMan && !photoViceChairMan && (
+                <div className="mb-2">
+                  <p className="text-sm text-gray-600 mb-1">Foto saat ini:</p>
+                  <Image
+                    src={candidate.photoViceChairMan}
+                    alt={formData.viceChairmanName}
+                    width={100}
+                    height={100}
+                    className="rounded border object-cover"
+                  />
+                </div>
+              )}
+
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) =>
+                  setPhotoViceChairMan(e.target.files?.[0] || null)
+                }
+                className="border px-3 py-2 rounded w-full"
+              />
+            </div>
+
+            <button
+              type="submit"
+              className="bg-blue-600 text-white px-4 py-2 rounded"
+            >
+              Update Candidate
+            </button>
+          </form>
         </div>
       </main>
     </div>

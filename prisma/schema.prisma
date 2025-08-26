@@ -32,6 +32,7 @@ model Organization {
   createdAt   DateTime   @default(now())
 
   elections   Election[]
+  candidates Candidate[]
 
   @@map("organizations")
 }
@@ -57,16 +58,21 @@ model Election {
 
 // ===================== Candidates =====================
 model Candidate {
-  id              String   @id @default(uuid())
-  chairmanName    String
-  viceChairmanName String
-  orgId           String?  // relasi opsional ke organization
-  photo           String?
-  visionMission   String?
-  createdAt       DateTime @default(now())
+  id                String   @id @default(uuid()) @db.Char(36)
+  chairmanName      String   @db.VarChar(100)
+  viceChairmanName  String   @db.VarChar(100)
+  orgId             String?  @db.Char(36)
+  electionId        String   @db.Char(36)
 
-  votes      Vote[]
-  election   Election? @relation(fields: [orgId], references: [id])
+  photoChairMan     String?  @db.VarChar(255)
+  photoViceChairMan String   @db.VarChar(255)
+  visionMission     String?  @db.Text
+  createdAt         DateTime @default(now())
+
+  // relasi
+  election          Election     @relation(fields: [electionId], references: [id])
+  organization      Organization? @relation(fields: [orgId], references: [id])
+  votes             Vote[]
 
   @@map("candidates")
 }
