@@ -45,6 +45,12 @@ export default function LandingPage() {
               >
                 Kontak
               </Link>
+              <Link
+                href="/candidates-home"
+                className="text-gray-700 hover:text-[#0B7077]"
+              >
+                Kandidat
+              </Link>
             </div>
             <div>
               <Link
@@ -59,37 +65,39 @@ export default function LandingPage() {
       </nav>
 
       {/* Hero Section */}
-      <section className="relative flex justify-between items-center px-14 pt-48 pb-32 bg-[#D2E6E4] text-[#0B7077]">
-        <div className="max-w-xl z-10">
-          <h1 className="text-4xl md:text-6xl font-bold mb-6">
-            Selamat Datang di KlikVote
-          </h1>
-          <p className="text-lg md:text-xl mb-8">
-            Sistem pemilihan modern yang aman, cepat, dan transparan. Memudahkan
-            pencatatan suara secara digital dan penghitungan hasil secara
-            real-time.
-          </p>
-          <div className="flex gap-4">
-            <Link
-              href="/login"
-              className="px-6 py-3 bg-[#0B7077] text-[#D2E6E4] font-semibold rounded-lg shadow hover:border hover:border-[#0B7077] hover:bg-transparent hover:text-[#0B7077] transition"
-            >
-              Login
-            </Link>
-            <Link
-              href="/register"
-              className="px-6 py-3 bg-[#0B7077] text-[#D2E6E4] font-semibold rounded-lg shadow hover:border hover:border-[#0B7077] hover:bg-transparent hover:text-[#0B7077] transition"
-            >
-              Registrasi
-            </Link>
-          </div>{" "}
+      <section className="relative flex justify-between items-center px-14 pt-20 pb-4 bg-[#D2E6E4] text-[#0B7077]">
+        <div className=" flex justify-between items-center z-10">
+          <div>
+            <h1 className="text-4xl md:text-6xl font-bold mb-6">
+              KlikVote, Cara Baru untuk Memilih
+            </h1>
+            <p className="text-lg md:text-xl mb-8">
+              Sistem pemilihan modern yang aman, cepat, dan transparan.
+              Memudahkan pencatatan suara secara digital dan penghitungan hasil
+              secara real-time.
+            </p>
+            <div className="flex gap-4">
+              <Link
+                href="/login"
+                className="px-6 py-3 bg-[#0B7077] text-[#D2E6E4] font-semibold rounded-lg shadow hover:border hover:border-[#0B7077] hover:bg-transparent hover:text-[#0B7077] transition"
+              >
+                Login
+              </Link>
+              <Link
+                href="/register"
+                className="px-6 py-3 bg-[#0B7077] text-[#D2E6E4] font-semibold rounded-lg shadow hover:border hover:border-[#0B7077] hover:bg-transparent hover:text-[#0B7077] transition"
+              >
+                Registrasi
+              </Link>
+            </div>{" "}
+          </div>
           <div>
             <Image
-              src="/images/people.svg"
+              src="/images/candidates.svg"
               alt="People"
               width={120}
               height={120}
-              className="absolute right-0 w-2xl bottom-0 z-50 pointer-events-none"
+              className="z-50 w-7xl pointer-events-none"
               priority
             />
           </div>
@@ -105,9 +113,9 @@ export default function LandingPage() {
       </section>
 
       {/* Features Section */}
-      <section id="features" className="py-20 bg-[#0B7077]">
+      <section id="features" className="py-12 bg-[#0B7077]">
         <div className="mx-auto px-14 text-center ">
-          <h2 className="text-3xl font-bold mb-12">Kenapa Memilih E-Vote?</h2>
+          <h2 className="text-3xl font-bold mb-8">Kenapa Memilih E-Vote?</h2>
           <div className="grid md:grid-cols-3 gap-8">
             <div className="p-6 bg-white rounded-xl shadow hover:shadow-lg transition">
               <h3 className="text-xl text-[#0B7077] font-semibold mb-4">

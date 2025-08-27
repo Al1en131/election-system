@@ -59,15 +59,16 @@ export default function Dashboard() {
     fetchData();
   }, []);
   useEffect(() => {
-    // Set tanggal hari ini
     const now = new Date();
     const options: Intl.DateTimeFormatOptions = {
+      weekday: "long", // <--- tambahin ini
       year: "numeric",
       month: "long",
       day: "numeric",
     };
     setToday(now.toLocaleDateString("id-ID", options));
   }, []);
+
   const [users, setUsers] = useState<Entity[]>([]);
   const [organizations, setOrganizations] = useState<Entity[]>([]);
   const [votes, setVotes] = useState<Entity[]>([]);
@@ -145,7 +146,7 @@ export default function Dashboard() {
             (a: any, b: any) =>
               new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
           );
-          setRecentVotes(sorted.slice(0, 5)); // ambil 5 terakhir
+          setRecentVotes(sorted.slice(0, 6)); // ambil 5 terakhir
         }
       } catch (err) {
         console.error("Gagal ambil vote terbaru:", err);
@@ -154,7 +155,21 @@ export default function Dashboard() {
 
     fetchRecentVotes();
   }, []);
-
+  const [time, setTime] = useState("");
+  useEffect(() => {
+    // Update jam real-time
+    const interval = setInterval(() => {
+      const now = new Date();
+      setTime(
+        now.toLocaleTimeString("id-ID", {
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+        })
+      );
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
   return (
     <div className="flex min-h-screen bg-gray-50 font-sans">
       {/* Sidebar */}
@@ -314,9 +329,9 @@ export default function Dashboard() {
           <div>
             <h2 className="font-bold text-xl">Selamat Datang, Admin!</h2>
             <p>
-              Hari ini adalah <b>{today}</b>. sebuah kesempatan baru bagi Admin
-              untuk memastikan jalannya proses pemilihan tetap transparan,
-              teratur, dan mudah diakses oleh seluruh pengguna.
+              Sebuah kesempatan baru bagi Admin untuk memastikan jalannya proses
+              pemilihan tetap transparan, teratur, dan mudah diakses oleh
+              seluruh pengguna.
             </p>
           </div>
           <div>
@@ -426,6 +441,42 @@ export default function Dashboard() {
           </div>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="bg-[#0B7077] rounded-lg p-4 flex gap-3 justify-center items-center shadow-xl border">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth="1.5"
+              stroke="currentColor"
+              className="size-6"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M6.75 2.994v2.25m10.5-2.25v2.25m-14.252 13.5V7.491a2.25 2.25 0 0 1 2.25-2.25h13.5a2.25 2.25 0 0 1 2.25 2.25v11.251m-18 0a2.25 2.25 0 0 0 2.25 2.25h13.5a2.25 2.25 0 0 0 2.25-2.25m-18 0v-7.5a2.25 2.25 0 0 1 2.25-2.25h13.5a2.25 2.25 0 0 1 2.25 2.25v7.5m-6.75-6h2.25m-9 2.25h4.5m.002-2.25h.005v.006H12v-.006Zm-.001 4.5h.006v.006h-.006v-.005Zm-2.25.001h.005v.006H9.75v-.006Zm-2.25 0h.005v.005h-.006v-.005Zm6.75-2.247h.005v.005h-.005v-.005Zm0 2.247h.006v.006h-.006v-.006Zm2.25-2.248h.006V15H16.5v-.005Z"
+              />
+            </svg>
+            {today}
+          </div>
+          <div className="bg-[#0B7077] rounded-lg p-4 flex gap-3 justify-center items-center shadow-xl border text-white">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth="1.5"
+              stroke="currentColor"
+              className="size-6"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M12 6v6l4 2m6-2a10 10 0 1 1-20 0 10 10 0 0 1 20 0Z"
+              />
+            </svg>
+            {time}
+          </div>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {elections.map((election) => {
             const labels = election.candidates.map(
               (c) => `${c.chairmanName} & ${c.viceChairmanName}`
@@ -451,7 +502,7 @@ export default function Dashboard() {
                 <h3 className="text-xl font-bold text-[#0B7077] mb-4">
                   {election.title}
                 </h3>
-                <div className="flex justify-center gap-4">
+                <div className="flex justify-center gap-3">
                   {/* Pie Chart */}
                   <div className="w-[150px] h-[150px]">
                     <Pie
@@ -475,12 +526,12 @@ export default function Dashboard() {
                   {/* Custom Legend */}
                   <div className="flex flex-col gap-2 justify-center">
                     {labels.map((label, i) => (
-                      <div key={i} className="flex gap-2">
+                      <div key={i} className="flex gap-1">
                         <span
-                          className="w-4 h-4 mt-0.5 rounded-full shrink-0"
+                          className="w-3 h-3 mt-0.5 rounded-full shrink-0"
                           style={{ backgroundColor: colors[i] }}
                         />
-                        <span className="text-sm text-gray-700">
+                        <span className="text-xs text-gray-700">
                           {label} — <b>{voteCounts[i]} vote</b>
                         </span>
                       </div>
@@ -502,7 +553,7 @@ export default function Dashboard() {
             alt="Julia Grey"
             width={100}
             height={100}
-            className="rounded-full mb-2"
+            className="rounded-md mb-2"
           />
           <p className="font-semibold text-[#0B7077]">Alif Essa Nurcahyani</p>
           <span className="text-gray-400 text-sm">Admin</span>
@@ -547,7 +598,7 @@ export default function Dashboard() {
                 d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
               />
             </svg>
-            Voter Terbaru
+            Vote Terbaru
           </h3>
           <ul className="flex flex-col gap-3">
             {recentVotes.length === 0 ? (
